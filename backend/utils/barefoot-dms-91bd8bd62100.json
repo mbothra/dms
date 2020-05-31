@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "barefoot-dms",
+  "private_key_id": "91bd8bd621003a42dddebafb15579202b9b6e047",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCwu3ppyBs4LOkz\nisz8KQDA+PmP2jroThUTz+Z1930AdrITdK04bvDJyLCC6VkQw6m8CG7yHsjoBeEr\ngAUrakoZMp/gd9JJGSzUv1S+swd5ruoiuYXmj55/mLYey5RYbiw2w6vfAM6bju4l\nowe/WwGTdh/z8V26XG92v2eHlafm1yfCOUaub5Nv/JnTaOMVS9eIDMGsK34MKpZf\neq25lqpzbEXf21K656mnfiNlRK2QY+UfZV1ERVT+MTDZIHAWSVzNAXCk2r57mKjm\nTmVSZTx7YuvpQN5f5BVLzn9f7BNYiXbgxay2dEDYLHNx0y3MY6qWA52YpJAqDYv9\nxtRiuGX/AgMBAAECggEALTKdIV14PJsbvr9CIkD4POHPrS7x/sQtVsZGGahEEzDH\n5Prja/nPYcOOBMTZrtRjXb/IY+pklhYe2mmgqNRDhAMy6Qyrvl8OXJBcA3M0t7V4\nko3gxTC4p8gt111YIG94pj7PfzYtIJJirERv8Eu9cPF2RYRWZJlMNlHID+BBsuKp\noSI08HFelBXn/swkPynv7/a9FAS+dqnhND6q5LoslS5rXPESRfk3EqLSzh1XjgY6\nu32SkERhlZJ/t+WV4xsS6k/ZAvTo06C26Xf7FC7XhKgEi4yz+MwLxHgm5k7fgaTG\nBlYrgK6hPZlF17z4tGQ/vslKTCBgJ09nBYBpGDiDDQKBgQDbwjkLpyNBsHk//tx4\nZvP4F6ulz4AmdjBc7PnsTjjhvLFSpnc1PrIEwy1o4Xy/mvieeQsY6oTiZqpp9CuF\nNJP8yhLymTTohEbPHcmnkujyUF+FfoCc+XvABuA3TbtypfP3VJ/162BVIrb7qip1\nv7/2RDzLoAHY+4/RORUYbjlUCwKBgQDN4MSfZjyUQmtQ5kWbEnI/3YReRPpsb7Aa\nBtiYILLFgiosu6Ivei+YSwbpAoHVowjK+v8abvvEOXuu/fx1Yinas5/8lgQn9srK\nKa2ZM9I50TWOjGVWLDSnCdY+A4Pdw0gl6QaMxOPLJCJVFbg+76xLPcpBbUu7ws77\ncpUOR6taXQKBgQCpIc8Tt9v7p5158mWuSNZFv7n8kDm54EaSjlQ/WWiP29DBopqm\noQ0Tez/Ms5Z2RQhJtzEiSQRi1s8bYq/IAlJPQRraGa3Nslho+S0FSpz8OX162YSU\ny7JBdUlFZw74St78IOZHt5LZkzEveaTaIOzV1WjQ8uHZJKtoRD2HIvX+RwKBgQCa\nDrTzlpyEUQNfIUE63l3R/qA7rqA6HoWHpFHV3LoJ4/JNUQb3QhZ1fscn+7FOPVaq\nFZJppF0Po/gypWqSKCeruThh2Zw4j4uGJhP6jXWlwDC0f8ig6ClqSYkhFJ5LhwLp\nI2u8UOUosNxkEQGzTsP99bnwpanDUe5y6HYznlvSHQKBgBii9I2hElapMkOl+iiL\nAaxAr6MQFMHAuotpiD59Dt3+k0nO9xJYLkU9bdYMGDesaGVNDyN/3R3b3sepmLw9\nGsdqUm6gM5W1UjvQTqy/0YvdWjkXp0gl7pWa28IkbggeBZKsXqpkUhSVB8FsjPcc\nuWeBHybbKQ3ZEhbyuroJI3u6\n-----END PRIVATE KEY-----\n",
+  "client_email": "dms-651@barefoot-dms.iam.gserviceaccount.com",
+  "client_id": "104720794090218849886",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dms-651%40barefoot-dms.iam.gserviceaccount.com"
+}
