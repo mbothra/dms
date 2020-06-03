@@ -1,15 +1,18 @@
 from flask import Flask, render_template, request, jsonify
-from flask_cors import CORS 
 import ast
-from utils import gsheet_utils, redis_utils
+from utils import gsheet_utils, redis_utils, gcalendar_utils
 from datetime import datetime
 import requests
 import urllib.parse
 
-app = Flask(__name__, static_folder="/Users/muditbothra/Downloads/argon-dashboard-react-master/build/static", template_folder="/Users/muditbothra/Downloads/argon-dashboard-react-master/build")
+app = Flask(__name__, static_folder="/Users/muditbothra/Downloads/barefoot-dashboard/build/static", template_folder="/Users/muditbothra/Downloads/barefoot-dashboard/build")
 # cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route("/")
+@app.route("/admin/dashboard")
+@app.route("/admin/projects")
+@app.route("/admin/maps")
+@app.route("/admin/user-profile")
 def hello():    
     return render_template('index.html')
 print('new Flask!')
@@ -156,4 +159,20 @@ def add_project():
     
     persist_new_in_redis("Donors","projects")
     persist_new_in_redis("Projects","Summary")
+    return "Success"
+
+@app.route("/get_calendar_events/",  methods=['GET'])
+def get_calendar_events():
+    print("Inside")
+    events = gcalendar_utils.get_events()
+    print(events)
+    return jsonify(events)
+
+@app.route("/add_calendar_event/",  methods=['POST'])
+def add_calendar_events():
+    print("Inside")
+    str = request.data.decode('UTF-8')
+    event_data = ast.literal_eval(str).get('event')
+    print(ast.literal_eval(str))
+    gcalendar_utils.create_event(event_data['startDate'],event_data['endDate'],event_data['eventName'])
     return "Success"

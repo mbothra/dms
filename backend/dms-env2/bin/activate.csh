@@ -8,7 +8,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/Users/muditbothra/Downloads/argon-dashboard-react-master/backend/dms-env2"
+setenv VIRTUAL_ENV "/Users/muditbothra/Downloads/barefoot-dashboard/backend/dms-env2"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"
