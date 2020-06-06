@@ -228,6 +228,8 @@ export default class ModalAddExpenseForm extends Component {
                             placeholder="Select Date"
                             selected={this.state.date}
                             onChange={(event)=>{this.onDateChange(event)}}
+                            dateFormat="dd/MM/yyyy h:mm aa"
+                            showTimeSelect
                         />
                         </Col>
                         </FormGroup>

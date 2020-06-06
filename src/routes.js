@@ -25,14 +25,14 @@ import Icons from "views/examples/Icons.js";
 
 var routes = [
   {
-    path: "/index",
+    path: "/dashboard",
     name: "Barefoot Edu Dashboard",
     icon: "ni ni-tv-2 text-primary",
     component: Index,
     layout: "/admin"
   },
   {
-    path: "/tables",
+    path: "/projects",
     name: "Projects/Tables",
     icon: "ni ni-bullet-list-67 text-red",
     component: Tables,

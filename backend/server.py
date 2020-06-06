@@ -5,7 +5,7 @@ from datetime import datetime
 import requests
 import urllib.parse
 
-app = Flask(__name__, static_folder="/Users/muditbothra/Downloads/barefoot-dashboard/build/static", template_folder="/Users/muditbothra/Downloads/barefoot-dashboard/build")
+app = Flask(__name__, static_folder="../build/static", template_folder="../build")
 # cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route("/")
@@ -17,6 +17,7 @@ def hello():
     return render_template('index.html')
 print('new Flask!')
 app.debug=True
+
 app.run(host='127.0.0.1')
 
 @app.route("/add_donor/",  methods=['POST'])

@@ -23,6 +23,7 @@ import Chart from "chart.js";
 // react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
 import ModalAddDonorForm from './examples/ModalAddDonorForm'
+import ModalAddCalEventForm from './examples/ModalAddCalEventForm'
 
 // reactstrap components
 import {
@@ -93,7 +94,6 @@ class Index extends React.Component {
   loadEvents = (event,me)=>{
     event.preventDefault()
     let ApiCalendar
-    ApiCalendar = me.refs.calendar.getEvents()
     if (me.state.calendarSignCheck == "sign out"){
       me.setState({
         calendarSignCheck:"sign in",
@@ -101,13 +101,16 @@ class Index extends React.Component {
       })
       return
     }
-    ApiCalendar.listUpcomingEvents(10,'en.indian#holiday@group.v.calendar.google.com')
-    .then((result) => {
-        me.setState({
-            events:result.result.items,
-            calendarSignCheck:"sign out",
-            eventShow:true
-        })
+
+    axios({
+      method:'get',
+      url:'/get_calendar_events/'
+    }).then(res => {
+      me.setState({
+        events:res.data,
+        calendarSignCheck:"sign out",
+        eventShow:true
+    })
     }).catch(error => {
       me.setState({
         isError:true
@@ -117,7 +120,7 @@ class Index extends React.Component {
 
   }
   AddEvents(e, me){
-    me.refs.calendar.addEvents()
+    e.preventDefault()
 
   }
 
@@ -228,6 +231,17 @@ class Index extends React.Component {
         modal:false
     })
   }
+  AddEventForm(event,me){
+    event.preventDefault()
+    me.setState({
+      modalEvent:true,
+    })
+  }
+  setModalEvent=()=>{
+    this.setState({
+        modalEvent:false
+    })
+  }
   onDismiss(me){
     me.setState({
       isError:false,
@@ -274,7 +288,7 @@ class Index extends React.Component {
     });
   }
   render() {
-    const {events,isError,donors,isActiveList,modal,chartData,expensesData,hniAmount,csrAmount,govAmount,individualAmount,foundationAmount,othersAmount} = this.state
+    const {events,isError,donors,isActiveList,modal,chartData,expensesData,hniAmount,csrAmount,govAmount,individualAmount,foundationAmount,othersAmount, modalEvent} = this.state
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
@@ -423,13 +437,15 @@ class Index extends React.Component {
                         color="primary"
                         href="#pablo"
                         onClick={(event)=>{
-                          this.AddEvents(event,this)
+                          this.AddEventForm(event,this)
                         }}
                         size="sm"
                         style={{hidden:this.state.eventShow}}
                       >
                         Add Events
                       </Button>
+                      <ModalAddCalEventForm modalOpen={modalEvent} onSuccess={()=>{}} setModal={this.setModalEvent} className="form"></ModalAddCalEventForm>
+
                       <CalendarApi ref="calendar"/>
                     </div>
                   </Row>

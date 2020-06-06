@@ -17,12 +17,7 @@
     "argon-dashboard",
     "argon-dashboard-react"
   ],
-  "author": "Creative Tim",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/creativetimofficial/argon-dashboard-react/issues"
-  },
-  "homepage": "https://demos.creative-tim.com/argon-dashboard-react/",
+  "author": "Mudit Bothra",
   "scripts": {
     "start": "NODE_PATH=./src react-scripts start",
     "build": "react-scripts build",
