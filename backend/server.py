@@ -18,7 +18,8 @@ def hello():
 print('new Flask!')
 app.debug=True
 
-app.run(host='127.0.0.1')
+if __name__ == '__main__':
+    app.run(host='127.0.0.1')
 
 @app.route("/add_donor/",  methods=['POST'])
 def add_donor():
