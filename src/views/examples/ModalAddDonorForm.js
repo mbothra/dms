@@ -9,6 +9,7 @@ import makeAnimated from 'react-select/animated';
 import axios from 'axios';
 import LoadingOverlay from 'react-loading-overlay';
 import DatePicker from "react-datepicker";
+import Toggle from 'react-bootstrap-toggle';
 
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -52,8 +53,13 @@ export default class ModalAddDonorForm extends Component {
            projectList:'',
            isError:false,
            isActiveForm:false,
-           date:new Date(),
+           date:null,
            dateValid:false,
+           toggleActive:false,
+           donorList:'',
+           text:'Adding Donations....',
+           optionsName:'',
+           optionsNameValid:false,
            formErrors:{
             name:'',
             email:'',
@@ -64,10 +70,13 @@ export default class ModalAddDonorForm extends Component {
             address:'',
             date:'',
             paymentType:'',
+            optionsName:''
            }
           }
         this.errorClass = this.errorClass.bind(this)
         this.onDismiss=this.onDismiss.bind(this)
+        this.onToggle = this.onToggle.bind(this);
+
     }
     
     onDismiss(me){
@@ -75,14 +84,17 @@ export default class ModalAddDonorForm extends Component {
           isError:false,
         })
       }
-
+      onToggle() {
+        this.setState({ toggleActive: !this.state.toggleActive });
+      }
     validateField(fieldName, value) {
         let fieldValidationErrors = this.state.formErrors;
         let emailValid= this.state.emailValid;
         let nameValid= this.state.nameValid;
+        let optionsNameValid= this.state.optionsNameValid;
         let phoneValid= this.state.phoneValid;
         let addressValid= this.state.addressValid;
-        let panValid= this.state.panVal
+        let panValid= this.state.panValid;
         let amountValid= this.state.amountValid;
         let categoryValid=this.state.categoryValid;        
         let dateValid=this.state.dateValid;
@@ -124,7 +136,11 @@ export default class ModalAddDonorForm extends Component {
             dateValid = value instanceof Date 
             fieldValidationErrors.date = dateValid?'':'Please Enter Date'
             break;
-          default:
+            case 'optionsName':
+              optionsNameValid = value.length > 0
+              fieldValidationErrors.optionsName = optionsNameValid ? '':'Name is Invalid. Please Check'
+              break;
+            default:
             break;
         }
         this.setState({formErrors: fieldValidationErrors,
@@ -168,9 +184,45 @@ export default class ModalAddDonorForm extends Component {
             phone: this.state.phone,
             address: this.state.address,
             projects:projectString.substring(0,projectString.length-1),
-            payment_Mode:this.state.paymentType.value
+            payment_mode:this.state.paymentType.value
         }
-    
+        if(!this.state.checked){
+        const data_donor_list = {
+          category: this.state.category.value,
+          name: this.state.name,
+          pan: this.state.pan,
+          email: this.state.email,
+          phone: this.state.phone,
+          address: this.state.address,
+          projects:projectString.substring(0,projectString.length-1),
+        }
+        this.setState({
+          text:'Saving Donor...'
+        })
+        axios({
+            method:'post',
+            url:'/add_donor_list/',
+            data:JSON.stringify({data_donor_list}),
+            headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+            },
+        }).then(res => {
+          me.setState({
+            isActiveForm:false
+          })
+        }).catch(error => {
+            me.setState({
+                isError:true,
+                isActiveForm:false
+              })
+            console.log(error.response)
+        });
+
+      }
+      this.setState({
+        text:'Adding Donation...'
+      })
         axios({
             method:'post',
             url:'/add_donor/',
@@ -185,6 +237,7 @@ export default class ModalAddDonorForm extends Component {
             me.setState({
                 isActiveForm:false
             })
+            document.getElementById("donorForm").reset();
         }).catch(error => {
             me.setState({
                 isError:true,
@@ -192,8 +245,7 @@ export default class ModalAddDonorForm extends Component {
               })
             console.log(error.response)
         });
-        }
-    
+      }
     onNameChange(event){
     
         this.setState({
@@ -201,6 +253,48 @@ export default class ModalAddDonorForm extends Component {
         },()=>{this.validateField('name', this.state.name)}
         )
     }
+
+    onOptionsNameChange(event){
+      let me =this
+      this.setState({
+          optionsName:event,
+      },()=>{this.validateField('optionsName', this.state.optionsName.value.Name)
+      let category={
+        value:event.value.Category,
+        label:event.value.Category
+      }
+      let projectsList = event.value.Projects.split(",")
+      projectsList = projectsList.map((project)=>{return {
+        value:project,
+        label:project
+      }})
+      console.log(projectsList)
+      me.setState({
+        name:event.value.Name,
+        pan: event.value.Pan,
+        email: event.value.Email,
+        phone: event.value.Phone.toString(),
+        address: event.value.Address,
+        category: category,
+        projects: projectsList
+      },
+        ()=>{
+          this.setState({
+            nameValid:true,
+            categoryValid:true,
+            panValid:true,
+            emailValid:true,
+            phoneValid:true,
+            addressValid:true
+          })
+
+        }
+        
+        )
+      }
+      )
+    }
+
     onEmailChange(event){
         this.setState({
             email:event.target.value
@@ -261,6 +355,41 @@ export default class ModalAddDonorForm extends Component {
         },()=>{this.validateField('date', this.state.date)}
         )
       }
+      onCheckBoxChange(event){
+        let me=this
+        this.setState({
+          checked:event.target.checked,
+          text:'Loading Existing Donors....',
+          isActiveForm:true
+        },()=>{
+          if(this.state.checked){
+              axios({
+                params: {
+                    name: "donor_list"
+                  },
+                method:'get',
+                url:'/get_donor_sheet/'
+              }).then(res => {
+                console.log(res)
+                me.setState({
+                    donorList:res.data,
+                    isActiveForm:false
+                })
+              }).catch(error => {
+                me.setState({
+                  isError:true
+                })
+                console.log(error.response)
+            });
+          }
+          else{
+            this.setState({
+              isActiveForm:false
+            })
+          }
+        })
+
+      }
     errorClass(error) {
         return(error.length === 0 ? '' : 'has-error');
     }
@@ -288,9 +417,9 @@ export default class ModalAddDonorForm extends Component {
     }
     render() {
         let {modalOpen,className,projectName} = this.props
-        const {isError,projectList,isActiveForm} = this.state
+        const {isError,projectList,isActiveForm,text,checked, donorList} = this.state
         const options = [
-            { value: 'HNI', label: 'HNI / Foundation' },
+            { value: 'HNI', label: 'HNI' },
             { value: 'CSR', label: 'CSR' },
             { value: 'Government', label: 'Government' },
             { value: 'Individuals', label: 'Individuals' },
@@ -298,10 +427,17 @@ export default class ModalAddDonorForm extends Component {
             { value: 'Others', label: 'Others' }
           ]
           const options_project = []
+          const options_donor = []
         if(projectList!=''){
                 projectList.map((project)=>{
                 options_project.push({
-                    value:project.project_name, label: project.project_name})
+                    value:project.Project_name, label: project.Project_name})
+            })
+        }
+        if(donorList!=''){
+          donorList.map((donor)=>{
+          options_donor.push({
+              value:donor, label: donor.Name})
             })
         }
         options_project.push(
@@ -318,15 +454,23 @@ export default class ModalAddDonorForm extends Component {
                     <LoadingOverlay
                             active={isActiveForm}
                             spinner
-                            text='Adding Donor...'
+                            text={text}
                             >
                     <ModalHeader>  Add expense for Project - {projectName}</ModalHeader>
 
-                    <Form style ={{marginLeft: "20px", width: "624px"}}>
+                    <Form style ={{marginLeft: "20px", width: "624px"}} id='donorForm'>
   
                     {isError==true?<Alert style={{width:"50%"}} color="warning" isOpen={isError} toggle={()=>{this.onDismiss(this)}}>
                           There was an Error in data
                         </Alert>:null}
+                        <FormGroup check>
+                          <Label check bold>
+                            <Input type="checkbox" checked={this.state.checked} onChange={(event)=>{this.onCheckBoxChange(event)}}/>{' '}
+                            Existing Donor (Check if donor already exists)
+                          </Label>
+                        </FormGroup>
+                        <FormGroup row/>
+
                         <FormGroup row>
                         <Label sm={4}>Date of Expense</Label>
                         <Col style={{width:'50%'}}>
@@ -354,6 +498,15 @@ export default class ModalAddDonorForm extends Component {
                         <FormGroup row>
                         <Label sm={4}>Name</Label>
                         <Col>
+                        {checked?
+                          <Select options={options_donor}
+                                components={animatedComponents}
+                                closeMenuOnSelect={true}
+                                value={this.state.optionsName}
+                                onChange={(event)=>{this.onOptionsNameChange(event)}}
+                                className="w-50"
+                        />
+                        :
                         <Input
                             className="w-50"
                             type="name"
@@ -365,7 +518,7 @@ export default class ModalAddDonorForm extends Component {
                             className="w-50"
 
                             // style = {{width:"30%"}}
-                        />
+                        />}
                         </Col>
                         </FormGroup>
                         <FormGroup row>
@@ -464,7 +617,6 @@ export default class ModalAddDonorForm extends Component {
                                 value={this.state.paymentType}
                                 onChange={(event)=>{this.onPaymentTypeChange(event)}}
                                 className="w-50"
-                                isMulti={true}
                         />
                         </Col>
                         </FormGroup>

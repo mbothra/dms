@@ -24,6 +24,9 @@ import ModalUpdateStatusForm from './ModalUpdateStatusForm'
 import ModalAddUserForm from './ModalAddUserForm'
 import ModalAddProjectForm from './ModalAddProjectForm'
 import ModalUpdateCompletionForm from './ModalUpdateCompletionForm'
+import ModalLineItemTable from './ModalLineItemTable'
+import makeAnimated from 'react-select/animated';
+import Select from 'react-select'
 
 // reactstrap components
 import {
@@ -45,9 +48,14 @@ import {
   Row,
   UncontrolledTooltip,
   Button,
+  Col,
 Alert} from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
+const animatedComponents = makeAnimated();
 
 class Tables extends React.Component {
   constructor(props) {
@@ -61,7 +69,9 @@ class Tables extends React.Component {
        isActiveProject:false,
        isError:false,
        projectNameForPass:'',
-       totalSum:''
+       totalSum:'',
+       processedCosts:'',
+       processedTotalSum:''
     }
     this.onDismiss=this.onDismiss.bind(this)
   }
@@ -90,6 +100,60 @@ class Tables extends React.Component {
   });
 }
 
+convertArrayOfObjectsToCSV = (args) => {
+  var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+  
+  data = args.data || null;
+  if (data == null || !data.length) {
+  return null;
+  }
+  
+  columnDelimiter = args.columnDelimiter || ',';
+  lineDelimiter = args.lineDelimiter || '\n';
+  
+  keys = Object.keys(data[0]);
+  
+  result = '';
+  result += keys.join(columnDelimiter);
+  result += lineDelimiter;
+  
+  data.forEach(function(item) {
+  ctr = 0;
+  keys.forEach(function(key) {
+  if (ctr > 0) result += columnDelimiter;
+  
+  result += (item[key].toString().replace(",",""));
+  ctr++;
+  });
+  result += lineDelimiter;
+  });
+  
+  return result;
+  }
+
+  downloadCSV = (data_to_csv, filename_csv) => {
+    console.log(data_to_csv)
+    var data, filename, link;
+    var csv = this.convertArrayOfObjectsToCSV({
+    data: data_to_csv
+    });
+    console.log(csv)
+    if (csv == null) return;
+    
+    filename = filename_csv || 'export.csv';
+    
+    if (!csv.match(/^data:text\/csv/i)) {
+    csv = 'data:text/csv;charset=utf-8,' + csv;
+    }
+    data = encodeURI(csv);
+    
+    link = document.createElement('a');
+    link.setAttribute('href', data);
+    link.setAttribute('download', filename);
+    link.click();
+    }
+
+
   loadProjectExpense(event,me, projectName){
     if(event != undefined){
       event.preventDefault()
@@ -113,7 +177,9 @@ class Tables extends React.Component {
         projectCosts:res.data,
         projectName:projectName,
         isActiveProject:false,
-        totalSum:totalSum
+        totalSum:totalSum,
+        processedCosts:res.data,
+        processedTotalSum:totalSum
     })
     }).catch(error => {
       me.setState({
@@ -139,12 +205,89 @@ class Tables extends React.Component {
     })
   }
 
-
   AddProject(event,me){
     event.preventDefault()
     me.setState({
       modalProject:true,
     })
+  }
+
+  onStartDateChange(event){
+    this.setState({
+      startDate:event
+    },()=>{
+    let ProcessedCostsData = []
+    let projectCosts = this.state.projectCosts
+    if(this.state.startDate && this.state.endDate){
+      this.setState({
+        isActiveList:true
+      })
+        for(let i=0;i<projectCosts.length;i++){
+            let cost = projectCosts[i] 
+            var dateString =  cost.Date // Oct 23
+
+            var dateParts = dateString.split("/");
+
+            // month is 0-based, that's why we need dataParts[1] - 1
+            var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]); 
+            if(dateObject > this.state.startDate && dateObject<this.state.endDate){
+              ProcessedCostsData.push(cost)
+            }
+        }
+        let totalSum=0
+        ProcessedCostsData.map((cost)=>{
+          totalSum = totalSum + Number(cost.Total_cost.toString().replace(',',''))
+        })
+        this.setState({
+          processedCosts :ProcessedCostsData,
+          processedTotalSum:totalSum,
+          isActiveList:false
+        })       
+    }
+    else{
+      this.setState({
+        processedCosts:projectCosts,
+      })
+    }})
+  }
+
+  onEndDateChange(event){
+    this.setState({
+      endDate:event
+    },()=>{
+      let ProcessedCostsData = []
+      let projectCosts = this.state.projectCosts
+      if(this.state.startDate && this.state.endDate){
+        this.setState({
+          isActiveList:true
+        })
+          for(let i=0;i<projectCosts.length;i++){
+              let cost = projectCosts[i] 
+              var dateString =  cost.Date // Oct 23
+  
+              var dateParts = dateString.split("/");
+  
+              // month is 0-based, that's why we need dataParts[1] - 1
+              var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]); 
+              if(dateObject > this.state.startDate && dateObject<this.state.endDate){
+                ProcessedCostsData.push(cost)
+              }
+          }
+          let totalSum=0
+          ProcessedCostsData.map((cost)=>{
+            totalSum = totalSum + Number(cost.Total_cost.toString().replace(',',''))
+          })
+          this.setState({
+            processedCosts :ProcessedCostsData,
+            processedTotalSum:totalSum,
+            isActiveList:false
+          })       
+      }
+      else{
+        this.setState({
+          processedCosts:projectCosts,
+        })
+      }})
   }
 
   reloadData(me){
@@ -208,6 +351,7 @@ class Tables extends React.Component {
         modal:false
     })
   }
+
   setModalBudget=()=>{
     this.setState({
         modalBudget:false
@@ -237,8 +381,50 @@ class Tables extends React.Component {
         modalProject:false
     })
   }
+  onOptionsTableChange=(event)=>{
+      this.setState({
+          tableOptions:event
+      }, console.log(event.value))
+  }
+  handleClickLineItem=(projectName)=>{
+      let me =this
+      let item = projectName +'_expanded'
+      let isExpanded = item == this.state.expanded
+      if(isExpanded){
+        item = 0
+      }
+      me.setState({
+        isActiveList:true
+      })
+      this.setState({
+        expanded:item
+      })
+      axios({
+        params: {
+            name: projectName
+          },
+        method:'get',
+        url:'/get_line_item/'
+      }).then(res => {
+        console.log(res)
+        me.setState({
+            projectLineItem:res.data,
+            isActiveList:false
+        })
+      }).catch(error => {
+        me.setState({
+          isError:true
+        })
+        console.log(error.response)
+    });
+  
+  }
   render() {
-    const {projectCosts,projectList,projectName, isActiveList, isActiveProject,isError,modal,projectNameForPass, totalSum, modalBudget, modalStatus,modalUser, modalProject, modalProgress} = this.state
+    const tableOptions = [
+      { value: 'Projects', label: 'Projects' },
+      { value: 'Items', label: 'Items' },
+    ]
+    const {projectCosts,projectList,projectName, isActiveList, isActiveProject,isError,modal,projectNameForPass, totalSum, modalBudget, modalStatus,modalUser, modalProject, modalProgress, processedCosts, processedTotalSum, projectLineItem} = this.state
     return (
       <>
         <Header />
@@ -257,11 +443,10 @@ class Tables extends React.Component {
                   text='Loading your content...'
                   >
                 <CardHeader className="border-0">
-                  <h3 className="mb-0" style={{float: 'left',width: '50%'}}>Project tables</h3>
+                  <h3 className="mb-0" style={{float: 'left',width: '50%'}}>Project tables (Click on the project icon to view expenses below)</h3>
                   <Button style={{float:'right', marginBottom:'10px', marginTop:'-10px'}} onClick={(e) => this.AddProject(e, this)}>Add Project</Button>
                   <ModalAddProjectForm modalOpen={modalProject} onSuccess={(e)=>this.reloadData(this)} setModal={this.setModalProject} className="form"> </ModalAddProjectForm>
                 </CardHeader>
-
                 <Table className="align-items-center table-flush" responsive>
                   <thead className="thead-light">
                     <tr>
@@ -270,6 +455,7 @@ class Tables extends React.Component {
                       <th scope="col">Status</th>
                       <th scope="col">Users</th>
                       <th scope="col">Completion</th>
+                      <th scope="col">Line Items</th>
                       <th scope="col" />
                     </tr>
                   </thead>
@@ -278,7 +464,11 @@ class Tables extends React.Component {
                     let path = "assets/img/theme/icon"+index+".png"
                     let users = project.Users.split(",")
                     let tooltip = "tooltip"+index
-                      return( <tr>
+                    let item = project.Project_name + "_expanded"
+                    let getItem = this.state.expanded
+                      return( 
+                        <React.Fragment>
+                      <tr >
                         <th scope="row">
                           <Media className="align-items-center">
                             <a
@@ -354,6 +544,9 @@ class Tables extends React.Component {
                             </div>
                           </div>
                         </td>
+                        <td classname='underline' onClick={()=>{this.handleClickLineItem(project.Project_name)}}>
+                        <span style={{textDecoration:'underline', color:'cornflowerblue'}} role="button">Expand</span>
+                        </td>
                         <td className="text-right">
                           <UncontrolledDropdown>
                             <DropdownToggle
@@ -406,7 +599,46 @@ class Tables extends React.Component {
                             </DropdownMenu>
                           </UncontrolledDropdown>
                         </td>
-                        </tr>)}):null}
+                        </tr>
+                        {this.state.expanded==item?
+                        <tr className="table-striped">
+                          <th  scope="colgroup" colspan="7">
+                          <Table hover>
+                              <thead className="thead-light">
+                                <th scope="col"></th>
+                                <th scope="col">Item</th>
+                                <th scope="col">Budget</th>
+                                <th scope="col">Total Costs</th>
+                                <th scope="col">Utilization</th>
+                              </thead>
+                              <tbody>
+                                {projectLineItem?projectLineItem.map((item)=>{
+                                  console.log(item)
+                                  let item_name = item["item_name"]
+                                  let budget = item['budget']
+                                  let total_cost = item['total_cost']
+                                  return(
+                                    <tr height="1px">
+                                      <td >
+                                        <i class={item['class_name']}></i>
+                                      </td>
+                                      <td>
+                                        {item_name}
+                                      </td>
+                                      <td>{budget}</td>
+                                      <td>{total_cost}</td>
+                                      <td>{item['utilisation']} %</td>
+                                    </tr>
+                                  )
+                                }):null
+                                }
+                              </tbody>
+                           </Table>
+                           </th>
+                        </tr>:null}
+                        </React.Fragment>
+                        )}):null}
+
                   </tbody>
                 </Table>
                 <CardFooter className="py-4">
@@ -476,8 +708,49 @@ class Tables extends React.Component {
                   text='Loading your content...'
                   >
                 <CardHeader className="bg-transparent border-0">
-                    <h3 className="text-white mb-0">{projectName}</h3>
-                </CardHeader>
+                <Row className="align-items-center">
+                    <Col>
+                              <h3 className="text-white mb-0">{projectName}</h3>
+                    </Col>
+
+                    <Col>
+                    </Col>
+                    <Col>
+                    </Col>
+
+                    <h5 className="text-white mb-0">Start Date</h5>
+                    <Col>
+                    <DatePicker
+                            className="w-5"
+                            id="date"
+                            placeholder="Select Date"
+                            selected={this.state.startDate}
+                            onChange={(event)=>{this.onStartDateChange(event)}}
+                        />
+                      </Col>
+                      <h5 className="text-white mb-0">End Date</h5>
+
+                      <Col>
+                      <DatePicker
+                            className="w-5"
+                            id="date"
+                            placeholder="Select Date"
+                            selected={this.state.endDate}
+                            onChange={(event)=>{this.onEndDateChange(event)}}
+                        />
+                      </Col>
+                      <Col>
+                    <Button
+                        color="primary"
+                        href="#pablo"
+                        onClick={(e) => {this.downloadCSV(processedCosts,'export.csv')}}
+                        size="sm"
+                      >
+                        Export CSV
+                      </Button>
+                    </Col>
+                  </Row>                
+                  </CardHeader>
   
                 <Table
                   className="align-items-center table-dark table-flush"
@@ -491,12 +764,13 @@ class Tables extends React.Component {
                       <th scope="col">Quantity</th>
                       <th scope="col">Unit cost</th>
                       <th scope="col">Total Cost</th>
+                      <th scope="col">Donors</th>
                       <th scope="col">Created By</th>
                     </tr>
                   </thead>
                   <tbody>
 
-                  {projectCosts!=''?projectCosts.map((project)=>{
+                  {processedCosts!=''?processedCosts.map((project)=>{
                           return( <tr>
                                 <th scope="row">
                                 <Media className="align-items-center">
@@ -520,6 +794,9 @@ class Tables extends React.Component {
                                 <div className="d-flex align-items-center">
                                     <span className="mr-2">{project.Total_cost} &#8377;</span>
                                 </div>
+                                </td>
+                                <td>
+                                    {project.Donors}
                                 </td>
                                 <td>
                                     {project.Created_by}
@@ -546,7 +823,7 @@ class Tables extends React.Component {
                           </td>
                           <td>
                           <div className="d-flex align-items-center">
-                              <span className="mr-2">{totalSum} &#8377;</span>
+                              <span className="mr-2">{processedTotalSum} &#8377;</span>
                           </div>
                           </td>
 

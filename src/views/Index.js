@@ -24,6 +24,11 @@ import Chart from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 import ModalAddDonorForm from './examples/ModalAddDonorForm'
 import ModalAddCalEventForm from './examples/ModalAddCalEventForm'
+import ModalDonorReceipt from './examples/ModalDonorReceipt'
+
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 // reactstrap components
 import {
@@ -67,6 +72,7 @@ class Index extends React.Component {
       isError:false,
       projectNets:'',
       donors:'',
+      processedDonor:'',
       isActiveList:false,
       chartData:'',
       expensesData:'',
@@ -91,6 +97,58 @@ class Index extends React.Component {
         this.state.chartExample1Data === "data1" ? "data2" : "data1"
     });
   };
+
+   convertArrayOfObjectsToCSV = (args) => {
+    var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+    
+    data = args.data || null;
+    if (data == null || !data.length) {
+    return null;
+    }
+    
+    columnDelimiter = args.columnDelimiter || ',';
+    lineDelimiter = args.lineDelimiter || '\n';
+    
+    keys = Object.keys(data[0]);
+    
+    result = '';
+    result += keys.join(columnDelimiter);
+    result += lineDelimiter;
+    
+    data.forEach(function(item) {
+    ctr = 0;
+    keys.forEach(function(key) {
+    if (ctr > 0) result += columnDelimiter;
+    
+    result += item[key];
+    ctr++;
+    });
+    result += lineDelimiter;
+    });
+    
+    return result;
+    }
+
+    downloadCSV = (data_to_csv, filename_csv) => {
+      var data, filename, link;
+      var csv = this.convertArrayOfObjectsToCSV({
+      data: data_to_csv
+      });
+      if (csv == null) return;
+      
+      filename = filename_csv || 'export.csv';
+      
+      if (!csv.match(/^data:text\/csv/i)) {
+      csv = 'data:text/csv;charset=utf-8,' + csv;
+      }
+      data = encodeURI(csv);
+      
+      link = document.createElement('a');
+      link.setAttribute('href', data);
+      link.setAttribute('download', filename);
+      link.click();
+      }
+
   loadEvents = (event,me)=>{
     event.preventDefault()
     let ApiCalendar
@@ -106,6 +164,7 @@ class Index extends React.Component {
       method:'get',
       url:'/get_calendar_events/'
     }).then(res => {
+  
       me.setState({
         events:res.data,
         calendarSignCheck:"sign out",
@@ -135,7 +194,8 @@ class Index extends React.Component {
       }).then(res => {
         me.setState({
             donors:res.data,
-            isActiveList:false
+            isActiveList:false,
+            processedDonor:res.data
 
         })
         me.setChartData(res.data,me)
@@ -153,10 +213,12 @@ class Index extends React.Component {
       method:'get',
       url:'/get_summary/'
     }).then(res => {
+      console.log(res)
       me.setState({
         expensesData : res.data
       })
     }).catch(error => {
+      console.log(error)
       me.setState({
         isError:true
       })
@@ -220,6 +282,73 @@ class Index extends React.Component {
   shouldComponentUpdate(){
     return true
   }
+
+  onStartDateChange(event){
+    this.setState({
+      startDate:event
+    },()=>{
+    let ProcessedDonorData = []
+    let donors = this.state.donors
+    if(this.state.startDate && this.state.endDate){
+      this.setState({
+        isActiveList:true
+      })
+        for(let i=0;i<donors.length;i++){
+            let donor = donors[i] 
+            var dateString =  donor.Date // Oct 23
+
+            var dateParts = dateString.split("/");
+
+            // month is 0-based, that's why we need dataParts[1] - 1
+            var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]); 
+            if(dateObject > this.state.startDate && dateObject<this.state.endDate){
+              ProcessedDonorData.push(donor)
+            }
+        }
+        this.setState({
+          processedDonor :ProcessedDonorData,
+          isActiveList:false
+        })       
+    }
+    else{
+      this.setState({
+        processedDonor:donors,
+      })
+    }})
+  }
+
+  onEndDateChange(event){
+    this.setState({
+      endDate:event
+    },()=>{
+    let ProcessedDonorData = []
+    let donors = this.state.donors
+    if(this.state.startDate && this.state.endDate){
+        let donors = this.state.donors
+        for(let i=0;i<donors.length;i++){
+              let donor = donors[i] 
+
+            var dateString =  donor.Date // Oct 23
+
+            var dateParts = dateString.split("/");
+
+            // month is 0-based, that's why we need dataParts[1] - 1
+            var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]); 
+            if(dateObject > this.state.startDate && dateObject<this.state.endDate){
+              ProcessedDonorData.push(donor)
+            }
+        }
+        this.setState({
+          processedDonor :ProcessedDonorData,
+        })       
+    }
+    else{
+      this.setState({
+        processedDonor :donors,
+      })
+    }})
+  }
+
   AddDonorForm(event,me){
     event.preventDefault()
     me.setState({
@@ -229,6 +358,11 @@ class Index extends React.Component {
   setModal=()=>{
     this.setState({
         modal:false
+    })
+  }
+  setModalDonorReceipt=()=>{
+    this.setState({
+        modalDonorReceipt:false
     })
   }
   AddEventForm(event,me){
@@ -261,7 +395,9 @@ class Index extends React.Component {
         },
     }).then(res => {
       me.setState({
-        isActiveList:false
+        receiptsLink:res.data,
+        isActiveList:false,
+        modalDonorReceipt:true
       })
     }).catch(error => {
         console.log(error.response)
@@ -288,7 +424,7 @@ class Index extends React.Component {
     });
   }
   render() {
-    const {events,isError,donors,isActiveList,modal,chartData,expensesData,hniAmount,csrAmount,govAmount,individualAmount,foundationAmount,othersAmount, modalEvent} = this.state
+    const {events,isError,donors,isActiveList,modal,chartData,expensesData,hniAmount,csrAmount,govAmount,individualAmount,foundationAmount,othersAmount, modalEvent, processedDonor, receiptsLink, modalDonorReceipt} = this.state
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
@@ -300,9 +436,14 @@ class Index extends React.Component {
     let dataNew = ''
     if (expensesData !=''){
       let filteredData = expensesData.filter((expense)=>expense.Expense>0)
-      let labels = filteredData.map(expense=>expense.Label)
-      let dataExpense = filteredData.map(expense=>expense.Expense)
-       dataNew =  canvas => {
+      let labels = []
+      var dataExpense = []
+      for(let i=0; i<expensesData.length; i++){
+        var keys = Object.keys(expensesData[i])
+        labels.push(keys[0])
+        dataExpense.push(expensesData[i][keys[0]])
+      }
+    dataNew =  canvas => {
         return {
           labels: labels,
           datasets: [
@@ -490,6 +631,8 @@ class Index extends React.Component {
                       </Button>
                     </div>
                     <ModalAddDonorForm modalOpen={modal} onSuccess={()=>this.reloadData(this)} setModal={this.setModal} className="form"></ModalAddDonorForm>
+                    <ModalDonorReceipt modalOpen={modalDonorReceipt} setModal={this.setModalDonorReceipt} className="form" link={receiptsLink}></ModalDonorReceipt>
+
                   </Row>
                 </CardHeader>
                 <Table className="align-items-center table-flush" responsive>
@@ -607,7 +750,48 @@ class Index extends React.Component {
                   text='Completing Action...'
                   >
                 <CardHeader className="bg-transparent border-0">
+                <Row className="align-items-center">
+                    <Col>
                     <h3 className="text-white mb-0">Donors List</h3>
+                    </Col>
+
+                    <Col>
+                    </Col>
+                    <Col>
+                    </Col>
+
+                    <h5 className="text-white mb-0">Start Date</h5>
+                    <Col>
+                    <DatePicker
+                            className="w-5"
+                            id="date"
+                            placeholder="Select Date"
+                            selected={this.state.startDate}
+                            onChange={(event)=>{this.onStartDateChange(event)}}
+                        />
+                      </Col>
+                      <h5 className="text-white mb-0">End Date</h5>
+
+                      <Col>
+                      <DatePicker
+                            className="w-5"
+                            id="date"
+                            placeholder="Select Date"
+                            selected={this.state.endDate}
+                            onChange={(event)=>{this.onEndDateChange(event)}}
+                        />
+                      </Col>
+                      <Col>
+                    <Button
+                        color="primary"
+                        href="#pablo"
+                        onClick={(e) => {this.downloadCSV(processedDonor,'export.csv')}}
+                        size="sm"
+                      >
+                        Export CSV
+                      </Button>
+                    </Col>
+                  </Row>
                 </CardHeader>
   
                 <Table
@@ -631,8 +815,8 @@ class Index extends React.Component {
                   </thead>
                   <tbody>
 
-                  {donors!=''?donors.map((donor)=>{
-                    console.log(donor)
+                  {processedDonor!=''?
+                      processedDonor.map((donor)=>{
                           return( <tr>
                                 <th scope="row">
                                 <Media className="align-items-center">
@@ -673,7 +857,7 @@ class Index extends React.Component {
                                     {donor.Address}
                                 </td>
                                 <td>
-                                    {donor.Payment_Mode}
+                                    {donor.Payment_mode}
                                 </td>
                                 <td>
                                     <span className="fa fa-file" onClick={()=>{this.downloadReceipt(donor,this)}}> Download</span>

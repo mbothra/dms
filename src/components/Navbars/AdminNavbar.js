@@ -77,7 +77,7 @@ class AdminNavbar extends React.Component {
                   </InputGroupAddon>
                   <Input placeholder="Search" type="text" />
                 </InputGroup>
-                <Button style={{marginLeft:'20px'}} onClick={(e) => this.reloadData(e)}>Reload Data</Button>
+                <Button style={{marginLeft:'20px'}} onClick={(e) => this.reloadData(e)}><a href=''>Reload Data</a></Button>
               </FormGroup>
             </Form>
             <Nav className="align-items-center d-none d-md-flex" navbar>

@@ -32,7 +32,7 @@ export default class ModalAddExpenseForm extends Component {
         super(props)
     
         this.state = {
-            date:new Date(),
+            date:null,
             dateValid:false,
             purpose:'',
             category:'',
@@ -45,17 +45,55 @@ export default class ModalAddExpenseForm extends Component {
             creatorValid:false,
             isError:false,
             isActiveForm:false,
+            donorList:'',
+            optionsName:'',
+            optionsNameValid:false,
             formErrors:{
                 date:'',
                 category:'',
                 quantity:'',
                 amount:'',
-                creator:''
+                creator:'',
+                optionsName:''
             }
         }
         this.onDismiss=this.onDismiss.bind(this)
     }
     
+    componentDidMount(){
+      let me =this
+      axios({
+        params: {
+            name: "donor_list"
+          },
+        method:'get',
+        url:'/get_donor_sheet/'
+      }).then(res => {
+        console.log(res)
+        me.setState({
+            donorList:res.data,
+        })
+      }).catch(error => {
+        me.setState({
+          isError:true
+        })
+        console.log(error.response)
+    });
+    }
+
+    onOptionsNameChange(event){
+      let me =this
+      if(event){
+      this.setState({
+          optionsName:event,
+      },()=>{this.validateField('optionsName', this.state.optionsName[0].value.Name)})}
+      else{
+        this.setState({
+          optionsName:event,
+      },()=>{this.validateField('optionsName', '')})}
+    }
+
+
     onDismiss(me){
         me.setState({
           isError:false,
@@ -69,6 +107,7 @@ export default class ModalAddExpenseForm extends Component {
         let creatorValid= this.state.creatorValid;
         let amountValid= this.state.amountValid;
         let categoryValid=this.state.categoryValid;
+        let optionsNameValid= this.state.optionsNameValid;
         switch(fieldName) {
           case 'amount':
             amountValid = !(isNaN(value))
@@ -90,6 +129,11 @@ export default class ModalAddExpenseForm extends Component {
             dateValid = value instanceof Date 
             fieldValidationErrors.date = dateValid?'':'Please Enter Date'
             break;
+            case 'optionsName':
+              console.log(value)
+              optionsNameValid = value.length > 0
+              fieldValidationErrors.optionsName = optionsNameValid ? '':'Name is Invalid. Please Check'
+              break;
           default:
             break;
         }
@@ -155,6 +199,13 @@ export default class ModalAddExpenseForm extends Component {
         const totalCost= this.state.amount
         const quantity = this.state.quantity
         const unitCost = totalCost / quantity
+        const donors = this.state.optionsName
+        console.log(donors)
+        let donorsString= ''
+        donors.map((donor)=>{
+          donorsString = donorsString + donor.label;
+          donorsString = donorsString + ","
+        })
         const expense ={
           Item: this.state.category.value,
           Date: this.state.date.toLocaleDateString(),
@@ -163,9 +214,10 @@ export default class ModalAddExpenseForm extends Component {
           Unit_cost: unitCost,
           Description: this.state.purpose,
           Created_by: this.state.creator,
-          projectName: this.props.projectName
+          projectName: this.props.projectName,
+          Donors:donorsString.substring(0,donorsString.length-1)
         }
-    
+        console.log(expense)
         axios({
           method:'post',
           url:'/add_expense/',
@@ -194,15 +246,22 @@ export default class ModalAddExpenseForm extends Component {
     
     render() {
         let {modalOpen,className,projectName} = this.props
-        let {isError, isActiveForm} = this.state
+        let {isError, isActiveForm, donorList} = this.state
         const options = [
-            { value: 'food', label: 'Food' },
-            { value: 'travel', label: 'Travel' },
-            { value: 'hardware', label: 'Hardware/software' },
-            { value: 'officesupplies', label: 'Office Supplies' },
-            { value: 'teamouting', label: 'Team Outing' },
-            { value: 'others', label: 'Others' }
-          ]
+          { value: 'Food', label: 'Food' },
+          { value: 'Travel', label: 'Travel' },
+          { value: 'Hardware/software', label: 'Hardware/software' },
+          { value: 'Office_Supplies', label: 'Office_Supplies' },
+          { value: 'Team_Outing', label: 'Team_Outing' },
+          { value: 'Others', label: 'Others' }
+        ]
+        const options_donor = []
+        if(donorList!=''){
+          donorList.map((donor)=>{
+          options_donor.push({
+              value:donor, label: donor.Name})
+            })
+        }
         return (
             <div>
                 <Modal isOpen={modalOpen} toggle={this.props.setModal} className={className}>
@@ -291,7 +350,19 @@ export default class ModalAddExpenseForm extends Component {
                         />
                         </Col>
                         </FormGroup>
-
+                        <FormGroup row>
+                        <Label sm={4}>Donor</Label>
+                        <Col>
+                          <Select options={options_donor}
+                                components={animatedComponents}
+                                closeMenuOnSelect={true}
+                                value={this.state.optionsName}
+                                onChange={(event)=>{this.onOptionsNameChange(event)}}
+                                className="w-50"
+                                isMulti
+                        />
+                        </Col>
+                        </FormGroup>
                         <FormGroup row>
                         <Label sm={4}>Created by</Label>
                         <Col>
