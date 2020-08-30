@@ -24,7 +24,6 @@ import ModalUpdateStatusForm from './ModalUpdateStatusForm'
 import ModalAddUserForm from './ModalAddUserForm'
 import ModalAddProjectForm from './ModalAddProjectForm'
 import ModalUpdateCompletionForm from './ModalUpdateCompletionForm'
-import ModalLineItemTable from './ModalLineItemTable'
 import makeAnimated from 'react-select/animated';
 import Select from 'react-select'
 
