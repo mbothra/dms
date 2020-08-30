@@ -20,8 +20,10 @@ def hello():
     return render_template('index.html')
 print('new Flask!')
 app.debug=True
-app.run(host='127.0.0.1')
 
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', debug=True)
+    
 @app.route("/add_donor/",  methods=['POST'])
 def add_donor():
     str = request.data.decode('UTF-8')
